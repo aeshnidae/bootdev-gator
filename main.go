@@ -1,19 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/aeshnidae/bootdev-gator/internal/config"
 )
 
 type state struct {
-	config *config.Config
-}
-
-type command struct {
-	name      string
-	arguments []string
+	cfg *config.Config
 }
 
 func main() {
@@ -21,30 +16,26 @@ func main() {
 	if err != nil {
 		log.Fatalf("error reading config: %v", err)
 	}
-	fmt.Printf("Read config: %+v\n", cfg)
 
-	err = cfg.SetUser("aeshnidae")
-	if err != nil {
-		log.Fatalf("couldn't set current user: %v", err)
+	programState := &state{cfg: &cfg}
+
+	cmds := commands{
+		registeredCommands: make(map[string]func(*state, command) error),
+	}
+	cmds.register("login", handlerLogin)
+
+	if len(os.Args) < 2 {
+		log.Fatalf("usage: cli <command> [args...]")
 	}
 
-	cfg, err = config.Read()
-	if err != nil {
-		log.Fatalf("error reading config: %v", err)
+	cmd := command{
+		Name: os.Args[1],
+		Args: os.Args[2:],
 	}
 
-	fmt.Printf("Read config again: %+v", cfg)
-
-}
-
-func handlerLogin(s *state, cmd command) error {
-	if len(cmd.arguments) == 0 {
-		return fmt.Errorf("missing username argument")
-	}
-
-	err := s.config.SetUser(cmd.arguments[0])
+	err = cmds.run(programState, cmd)
 	if err != nil {
-		return fmt.Errorf("couldn't set current user: %v", err)
+		log.Fatal(err)
 	}
 
 }
