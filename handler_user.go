@@ -52,12 +52,12 @@ func handlerRegister(s *state, cmd command) error {
 		Name:      name,
 	})
 	if err != nil {
-		return fmt.Errorf("error registering user : %w", name)
+		return fmt.Errorf("error registering user : %v ,%w", name, err)
 	}
 
 	err = s.cfg.SetUser(insertedUser.Name)
 	if err != nil {
-		return fmt.Errorf("couldn't set current user: %w after registration", err)
+		return fmt.Errorf("couldn't set current user: %w", err)
 	}
 
 	fmt.Println("User registered successfully!")
